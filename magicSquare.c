@@ -59,6 +59,21 @@ void printSquare(unsigned int n, unsigned int * arr){
 	}
 }
 
+unsigned int factorial(unsigned int x){
+	unsigned int out = 1;
+	for (unsigned int i = x; i > 1; i--){
+		out = out*i;
+	}
+	return out;
+}
+
+typedef struct{
+	unsigned int ** array;
+	unsigned int n;
+	unsigned int k;
+	unsigned int combs;
+} CombArray;
+
 typedef struct{
 	unsigned int ** array;
     unsigned int numPerm;
@@ -67,12 +82,9 @@ typedef struct{
 } PermArray;
 
 PermArray * newPermArray(unsigned int n){
-	unsigned int num = 1;
+	unsigned int num = factorial(n);
 	unsigned int i;
 	PermArray * out = malloc(sizeof(PermArray)*n);
-	for (i = n; i > 1; i--){
-		num = num  * i;
-	}
 	out->numPerm = num;
 	out->size_of_each = n;
 	out->numFilled = 0;
@@ -99,6 +111,26 @@ void printPermArray(PermArray * arr){
 		printf("\n");
 	}
 	return;
+}
+
+CombArray * newCombArray(unsigned int n, unsigned int k){
+	CombArray * out = malloc(sizeof(CombArray));
+	out->n = n;
+	out->k = k;
+	out->combs = factorial(n)/(factorial(k)*factorial(n-k));
+	out->array = malloc(sizeof(unsigned int *) * out->combs);
+	for (unsigned int i = 0; i < out->combs; i++){
+		out->array[i] = malloc(sizeof(unsigned int)*k);
+	}
+	return out;
+}
+
+void freeCombArray(CombArray * x){
+	for (unsigned int i = 0; i < x->combs; i++){
+		free(x->array[i]);
+	}
+	free(x->array);
+	free(x);
 }
 
 void recursivePermute(unsigned int numdone, unsigned int * done, unsigned int numleft, unsigned int * left, PermArray * arr){
@@ -134,8 +166,10 @@ PermArray * permuteArray(unsigned int n, unsigned int * array){
 	return out;
 }
 
+
+
 int main(){
-	unsigned int a[] = {1,2,3,4,5,6,7};
+	unsigned int a[] = {1,2,3,4,5,6,7,8,9};
 	PermArray * pa = permuteArray(7,a);
 	printPermArray(pa);
 	freePermArray(pa);
