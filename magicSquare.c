@@ -21,7 +21,7 @@ int is_magic(unsigned int n, unsigned int * arr){
 		}
 	}
 	// check columns
-	for (unsigned int row = 1; row < n; row++){
+	for (unsigned int row = 0; row < n; row++){
 		testsum = 0;
 		for (i = 0; i < n; ++i){
 			testsum = testsum + arr[row+(i*n)];
@@ -72,13 +72,14 @@ typedef struct{
 	unsigned int n;
 	unsigned int k;
 	unsigned int combs;
+        unsigned int numFilled;
 } CombArray;
 
 typedef struct{
 	unsigned int ** array;
-    unsigned int numPerm;
-    unsigned int size_of_each;
-    unsigned int numFilled;
+        unsigned int numPerm;
+        unsigned int size_of_each;
+        unsigned int numFilled;
 } PermArray;
 
 PermArray * newPermArray(unsigned int n){
@@ -99,6 +100,7 @@ void freePermArray(PermArray * arr){
 	for (unsigned int i = 0; i < arr->numPerm; i++){
 		free(arr->array[i]);
 	}
+        free(arr->array);
 	free(arr);
 	return;
 }
@@ -113,10 +115,21 @@ void printPermArray(PermArray * arr){
 	return;
 }
 
+void printCombArray(CombArray * arr){
+	for (unsigned int i = 0; i < arr->numFilled; i++){
+		for (unsigned int entry = 0; entry < arr->k; entry++){
+			printf("%u\t", arr->array[i][entry]);
+		}
+		printf("\n");
+	}
+	return;
+}
+
 CombArray * newCombArray(unsigned int n, unsigned int k){
 	CombArray * out = malloc(sizeof(CombArray));
 	out->n = n;
 	out->k = k;
+        out->numFilled = 0;
 	out->combs = factorial(n)/(factorial(k)*factorial(n-k));
 	out->array = malloc(sizeof(unsigned int *) * out->combs);
 	for (unsigned int i = 0; i < out->combs; i++){
@@ -134,7 +147,7 @@ void freeCombArray(CombArray * x){
 }
 
 void recursivePermute(unsigned int numdone, unsigned int * done, unsigned int numleft, unsigned int * left, PermArray * arr){
-	int i;
+	unsigned int i;
 	if (numleft <= 1){
 		for (i = 0; i < numdone; i++){
 			arr->array[arr->numFilled][i] = done[i];
@@ -166,12 +179,60 @@ PermArray * permuteArray(unsigned int n, unsigned int * array){
 	return out;
 }
 
+void recursiveCombinate(unsigned int numFixed, unsigned int * fixed, unsigned int numFree, unsigned int * free, CombArray * arr){
+  unsigned int i;
+  if (numFixed < arr->k){
+    for (i = 0; i < numFree; i++){
+      fixed[numFixed] = free[i];
+      recursiveCombinate(numFixed+1,fixed,numFree-i-1,free+i+1,arr);
+    }
+  }else{
+    for (i = 0; i < arr->k; i++){
+      arr->array[arr->numFilled][i] = fixed[i];
+    }
+    arr->numFilled++;
+  }
+}
 
+CombArray * combinateArray(unsigned int n, unsigned int k, unsigned int * a){
+  CombArray * out = newCombArray(n,k);
+  unsigned int fixed[k];
+  recursiveCombinate(0,fixed,n,a,out);
+  return out;
+}
+
+void check_magic_withMax(unsigned int squareDim, unsigned int N){
+  unsigned int numbs[N];
+  unsigned int i;
+  for (i = 0; i < N; i++){
+    numbs[i] = i;
+  }
+  unsigned int checknums[squareDim*squareDim-1];
+  CombArray * ca = combinateArray(N,squareDim*squareDim-1,numbs);
+  for (i = 0; i < ca->combs; i++){
+    for (unsigned int j = 0; j < ca->k; j++){
+      checknums[j] = ca->array[i][j];
+    }
+    checknums[ca->k] = N;
+    PermArray * pa = permuteArray(ca->k,checknums);
+    for (unsigned int k = 0; k < pa->numPerm; k++){
+      if (is_magic(squareDim, pa->array[k])){
+        printf("Found magic:\n");
+        printSquare(squareDim,pa->array[k]);
+      }
+    }
+    freePermArray(pa);
+  }
+  freeCombArray(ca);
+}
 
 int main(){
-	unsigned int a[] = {1,2,3,4,5,6,7,8,9};
-	PermArray * pa = permuteArray(7,a);
-	printPermArray(pa);
-	freePermArray(pa);
-	return 0;
+  unsigned int square_edge = 3;
+  unsigned int start = 8;
+  unsigned int max = 8;
+  for (unsigned int i = start; i < max+1; i++){
+    printf("Checking size %u with max %u\n",square_edge,i);
+    check_magic_withMax(square_edge, i);
+  }
+  return 0;
 }
