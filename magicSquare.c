@@ -4,7 +4,7 @@
 // n is dimensions of square
 // arr is square read across rows
 int is_magic(unsigned int n, unsigned int * arr){
-	unsigned int sum;
+	unsigned int sum = 0;
 	int i;
 	for (i = 0; i < n; ++i){
 		sum = sum + arr[i];
@@ -57,6 +57,7 @@ void printSquare(unsigned int n, unsigned int * arr){
 		}
 		printf("\n");
 	}
+	//printf("\n");
 }
 
 unsigned int factorial(unsigned int x){
@@ -201,38 +202,44 @@ CombArray * combinateArray(unsigned int n, unsigned int k, unsigned int * a){
   return out;
 }
 
-void check_magic_withMax(unsigned int squareDim, unsigned int N){
+unsigned int check_magic_withMax(unsigned int squareDim, unsigned int N){
   unsigned int numbs[N];
+  unsigned int numFound;
   unsigned int i;
   for (i = 0; i < N; i++){
     numbs[i] = i;
   }
-  unsigned int checknums[squareDim*squareDim-1];
+  unsigned int checknums[squareDim*squareDim];
   CombArray * ca = combinateArray(N,squareDim*squareDim-1,numbs);
   for (i = 0; i < ca->combs; i++){
     for (unsigned int j = 0; j < ca->k; j++){
       checknums[j] = ca->array[i][j];
     }
     checknums[ca->k] = N;
-    PermArray * pa = permuteArray(ca->k,checknums);
-    for (unsigned int k = 0; k < pa->numPerm; k++){
+    //printSquare(squareDim,checknums);
+    PermArray * pa = permuteArray(squareDim*squareDim,checknums);
+    for (unsigned int k = 0; k < pa->numFilled; k++){
+    	//printf("Another square\n");
+    	//printSquare(squareDim,pa->array[k]);
       if (is_magic(squareDim, pa->array[k])){
-        printf("Found magic:\n");
-        printSquare(squareDim,pa->array[k]);
+        //printf("Found magic:\n");
+        //printSquare(squareDim,pa->array[k]);
+        numFound++;
       }
     }
     freePermArray(pa);
   }
   freeCombArray(ca);
+  return numFound;
 }
 
 int main(){
   unsigned int square_edge = 3;
   unsigned int start = 8;
-  unsigned int max = 8;
+  unsigned int max = 15;
   for (unsigned int i = start; i < max+1; i++){
     printf("Checking size %u with max %u\n",square_edge,i);
-    check_magic_withMax(square_edge, i);
+    printf("Found %u\n",check_magic_withMax(square_edge, i)/8);
   }
   return 0;
 }
